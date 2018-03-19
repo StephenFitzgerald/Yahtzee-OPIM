@@ -30,10 +30,7 @@ namespace Yahtzee_Project
             //generate dice 5 value
             int dice5 = random.Next(1, 7); // creates a number between 1 and 6
             Console.Write("\nValue of Dice 5: " + dice5);
-            //generate dice 6 value
-            int dice6 = random.Next(1, 7); // creates a number between 1 and 6
-            Console.Write("\nValue of Dice 6: " + dice6);
-
+            
             //Showing totals for all categories AFTER ROLL 1
 
             //Asking which dice the user would like to keep
