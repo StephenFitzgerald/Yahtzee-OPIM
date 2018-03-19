@@ -14,6 +14,10 @@ namespace Yahtzee_Project
         {
             //RANDOM # GENERATOR
             Random random = new Random();
+            
+            //Score Generators
+            //Sum of 1's
+            int ScoreOf1s;
 
             //generate dice 1 value
             int dice1 = random.Next(1, 7); // creates a number between 1 and 6
