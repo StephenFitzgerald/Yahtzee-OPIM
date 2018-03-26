@@ -1,15 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace Yahtzee_Project
-{
-    class Program
-    {
-        static void Main(string[] args)
-        {
             //RANDOM # GENERATOR
             Random random = new Random();
 
@@ -65,6 +53,3 @@ namespace Yahtzee_Project
             //Loop process
 
             Console.ReadLine();
-        }
-    }
-}
