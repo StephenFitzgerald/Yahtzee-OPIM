@@ -42,6 +42,22 @@ namespace Yahtzee
                 Console.WriteLine("{0} : {1}", grp.Key, grp.Count());
             }
 
+            // Ask the user which dice they would like to keep.
+            Console.WriteLine("Do you want to reroll? Y/N");
+
+            if (Console.ReadLine().ToLower() == "y")
+            {
+                Console.WriteLine("You put yes.");
+            }
+            else if (Console.ReadLine().ToLower() == "n")
+            {
+                Console.WriteLine("You put no.");
+            }
+            else
+            {
+                Console.WriteLine("You put neither yes nor no.");
+            }
+
             Console.ReadLine();
         }
     }
