@@ -19,8 +19,13 @@ namespace Yahtzee
         {
             for (int i = 0; i < 5; i++)
             {
-                dice = random.Next(1, 7);
-                diceRoll.Add(dice);
+                if (diceRoll[i] == 0)
+                    diceRoll[i] = random.Next(1, 7);
+                else
+                {
+                    dice = random.Next(1, 7);
+                    diceRoll.Add(dice);
+                }
             }
         }
 
@@ -86,6 +91,7 @@ namespace Yahtzee
             Console.WriteLine("Which dice #s do you want to keep? Separate using spaces (ex. 2 3 5)");
             isValid = true;
 
+            // Do this until the user enters a valid input.
             do
             {
                 string s = Console.ReadLine();
@@ -95,6 +101,21 @@ namespace Yahtzee
                 {
                     // Split the inputted string into each individual dice value.
                     string[] diceKept = s.Split(null);
+
+                    for (int i = 0; i < diceRoll.Count; i++)
+                    {
+                        for (int j = 0; j < Convert.ToInt32(diceKept.Count()); j++)
+                        {
+                            if (j == Convert.ToInt32(diceKept[i]))
+                                break;
+                        }
+                        diceRoll[i] = 0;
+                        diceRoll[Convert.ToInt32(diceKept[i])-1] = 0;
+                    }
+
+                    // diceKept[] = 2, 3, 5
+                    // diceRoll[] = 1, 4, 2, 2, 6
+
                     isValid = false;
                 }
 
