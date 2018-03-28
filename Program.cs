@@ -17,11 +17,12 @@ namespace Yahtzee
         static int upperAmount = 6;                             // Amount of categories in the Upper Section.
         static int currentRound = 0;                            // The current round of the game.
         static int numberOfRounds = 13;                         // Number of rounds in a game of Yahtzee.
-        static int currentRoll = 1;                             // The current roll of the round.
+        static int currentRoll = 0;                             // The current roll of the round.
         static int numberOfRolls = 3;                           // Number of rolls allowed during a round.
         static int currentScore = 0;                            // The current score after each round.
         static int grandTotal = 0;                              // Total score.
         static string lineSeparator = "====================";   // Line separator, for aesthetics.
+        static bool isBonusYahtzee = false;                     // If the user rolled a bonus Yahtzee.
 
         // Score object to be used by the score card.
         public class Score
@@ -50,30 +51,22 @@ namespace Yahtzee
         {
             // Create the score card and roll the dice.
             CreateScoreCard();
-            RollDice();
+            CreateDice();
+            RerollDice();
+
+            // Display a welcome message.
+            Console.WriteLine("Welcome to Yahtzee!");
 
             // Show a line separator.
             ShowLine();
         }
 
-        // Method that creates the initial dice roll. Only executed once.
-        static void RollDice()
+        // Method that creates the initial dice. Only executed once.
+        static void CreateDice()
         {
-
+            // Create the number of dice required to play the game.
             for (int i = 0; i < numberOfDice; i++)
-            {
                 diceRoll.Add(new Dice { });
-                diceRoll[i].Value = random.Next(1, 7);
-            }
-
-            /*
-            // Hardcode values of dice rolls to test if each category works.
-            diceRoll.Add(1);
-            diceRoll.Add(2);
-            diceRoll.Add(3);
-            diceRoll.Add(4);
-            diceRoll.Add(5);
-            */
         }
 
         // Method that creates the initial scorecard. Only executed once.
@@ -311,6 +304,10 @@ namespace Yahtzee
                 diceRoll[i].IsKept = false;
             }
 
+            // Reset the display values back to 0.
+            for (int i = 0; i < scoreCard.Count; i++)
+                scoreCard[i].ShownScore = 0;
+
             // Increment the current roll.
             currentRoll++;
         }
@@ -357,16 +354,13 @@ namespace Yahtzee
             bool isDouble = false;
             bool isTriple = false;
 
-            // Check to see if there are EXACTLY 2 occurrences of a number
             foreach (var v in diceValues.GroupBy(i => i))
             {
+                // Check to see if there are EXACTLY 2 occurrences of a number.
                 if (v.Count() == 2)
                     isDouble = true;
-            }
 
-            // Check to see if there are EXACTLY 3 occurrences of a number
-            foreach (var v in diceValues.GroupBy(i => i))
-            {
+                // Check to see if there are EXACTLY 3 occurrences of a number.
                 if (v.Count() == 3)
                     isTriple = true;
             }
@@ -399,7 +393,20 @@ namespace Yahtzee
             foreach (var v in diceRoll.GroupBy(i => i.Value))
             {
                 if (v.Count() == 5)
-                    scoreCard[11].ShownScore = yahtzee;
+                {
+                    // If the user already scored a Yahtzee, reward a bonus one...
+                    if (scoreCard[11].ActualScore != 0)
+                        isBonusYahtzee = true;
+
+                    // Otherwise, display points.
+                    else
+                        scoreCard[11].ShownScore = yahtzee;
+
+                    // Prevent additional rolls.
+                    // Not sure if the rules allow a reroll if a Yahtzee is achieved.
+                    currentRoll = numberOfRolls;
+                    Console.WriteLine("Yahtzee!");
+                }
             }
 
             // 12. Chance
@@ -515,6 +522,7 @@ namespace Yahtzee
             int upperScoreThreshold = 23;
             int upperScoreSum = 0;
             int upperScoreBonus = 35;
+            int yahtzeeBonus = 100;
 
             // Check to see if the Upper Section total surpassed the threshold.
             for (int i = 0; i < upperAmount; i++)
@@ -529,13 +537,21 @@ namespace Yahtzee
                 ShowLine();
             }
 
+            // Check to see if a bonus Yahtzee should be rewarded.
+            if (isBonusYahtzee)
+            {
+                grandTotal += yahtzeeBonus;
+                Console.WriteLine("Yahtzee bonus: " + yahtzeeBonus);
+                ShowLine();
+            }
+
             // Calculate the final score after all bonuses.
             grandTotal += currentScore;
 
             Console.WriteLine("Final score: " + grandTotal);
 
             // Display information on where to buy the game.
-            // TODO.
+            // TODO. Web scraper.
             Console.WriteLine("Press enter to exit.");
             Console.ReadLine();
         }
