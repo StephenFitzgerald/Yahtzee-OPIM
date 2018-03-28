@@ -10,15 +10,17 @@ namespace Yahtzee
     class Program
     {
         // Variables that can be used globally.
-        static Random random = new Random();                // Random number generator.
-        static List<int> diceRoll = new List<int>();        // A list of the dice rolls from a round.
-        static List<String> scorecard = new List<string>(); // A list of scores for the game.
-        static int dice;                                    // Value of a Dice
-        static int numberOfDice = 5;                        // Can be changed if the rules of Yahtzee change the number of dice.
-        static int currentRound;                            // The current round of the game.
-        static int numberOfRounds = 13;                     // Number of rounds in a game of Yahtzee.
-        static int currentRoll = 1;                         // The current roll of the round.
-        static int numberOfRolls = 3;                       // Number of rolls allowed during a round.
+        static Random random = new Random();                    // Random number generator.
+        static List<int> diceRoll = new List<int>();            // A list of the dice rolls from a round.
+        static List<Score> scoreCard = new List<Score>();       // A list of scores for the game.
+        static List<Score> finalScoreCard;                      // A list of the final scores for the game.
+        static int dice;                                        // Value of a Dice
+        static int numberOfDice = 5;                            // Can be changed if the rules of Yahtzee change the number of dice.
+        static int currentRound;                                // The current round of the game.
+        static int numberOfRounds = 13;                         // Number of rounds in a game of Yahtzee.
+        static int currentRoll = 1;                             // The current roll of the round.
+        static int numberOfRolls = 3;                           // Number of rolls allowed during a round.
+        static int grandTotal;                                  // Total score.
 
         // Method that creates the initial dice roll. Only executed once.
         static void RollDice()
@@ -28,6 +30,27 @@ namespace Yahtzee
                 dice = random.Next(1, 7);
                 diceRoll.Add(dice);
             }
+        }
+
+        // Method that creates the initial scorecard. Only executed once.
+        static void CreateScoreCard()
+        {
+            scoreCard.Add(new Score { Name = "Aces" });
+            scoreCard.Add(new Score { Name = "Twos" });
+            scoreCard.Add(new Score { Name = "Threes" });
+            scoreCard.Add(new Score { Name = "Fours" });
+            scoreCard.Add(new Score { Name = "Fives" });
+            scoreCard.Add(new Score { Name = "Sixes" });
+            scoreCard.Add(new Score { Name = "3 of a Kind" });
+            scoreCard.Add(new Score { Name = "4 of a Kind" });
+            scoreCard.Add(new Score { Name = "Full House" });
+            scoreCard.Add(new Score { Name = "Small Straight" });
+            scoreCard.Add(new Score { Name = "Large Straight" });
+            scoreCard.Add(new Score { Name = "Yahtzee" });
+            scoreCard.Add(new Score { Name = "Chance" });
+
+            // Creates a copy of the score card that is used for after the user inputs his or her score and for final calculations.
+            finalScoreCard = scoreCard;
         }
 
         // Method that rerolls the dice.
@@ -44,17 +67,80 @@ namespace Yahtzee
             currentRoll++;
         }
 
+        // Score object to be used by the score card.
+        public class Score
+        {
+            public string Name { get; set; }    // Name of the category
+            public int Amount = 0;              // Amount of points for that category
+        }
+
+        // Method that displays the scorecard.
+        static void DisplayScoreCard()
+        {
+            // Calculations for all of the scoring. Pretty much hardcoded because of how these were defined by the rules of the game.
+            // Describe the upper section scoring. (Indices 0-5)
+            int upperScore = 6;
+
+            for (int i = 0; i < upperScore; i++)
+                scoreCard[i].Amount = diceRoll.Where(j => j == (i + 1)).Count();
+
+            // Describe the lower section scoring. (Indices 6-12)
+
+            // 6. Three of a Kind
+
+            // 7. Four of a Kind
+
+            // 8. Full House
+
+            // 9. Small Straight
+
+            // 10. Large Straight
+
+            // 11. Yahtzee
+
+            // 12. Chance
+            scoreCard[12].Amount = diceRoll.Sum();
+
+            Console.WriteLine("Score card:");
+
+            for (int i = 0; i < scoreCard.Count; i++)
+            {
+                Console.WriteLine(scoreCard[i].Name + ": " + scoreCard[i].Amount);
+            }
+
+            Console.WriteLine("Enter the category you want to submit your score to (ex. Fours, Small Straight).");
+        }
+
         // Method that enters the score.
         static void EnterScore()
         {
-            
+            string s = Console.ReadLine();
+
+            for (int i = 0; i < scoreCard.Count; i++)
+            {
+                if (s.ToLower().Equals(scoreCard[i].Name.ToLower()))
+                {
+                    finalScoreCard[i].Amount = scoreCard[i].Amount;
+                    break;
+                }
+            }
+        }
+
+        static void CalculateScore()
+        {
+            List<int> scores = scoreCard.Select(i => i.Amount).ToList();
+            grandTotal = scores.Sum();
         }
 
         // Main method.
         static void Main(string[] args)
         {
+            // Create the score card.
+            CreateScoreCard();
+
             // Roll the dice.
             RollDice();
+            DisplayScoreCard();
 
             // If the game is not over...
             for (currentRound = 0; currentRound < numberOfRounds; numberOfRounds++)
