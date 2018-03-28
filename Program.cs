@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -551,9 +552,32 @@ namespace Yahtzee
             Console.WriteLine("Final score: " + grandTotal);
 
             // Display information on where to buy the game.
-            // TODO. Web scraper.
+            DisplayPrice();
+
+            // Exit.
             Console.WriteLine("Press enter to exit.");
             Console.ReadLine();
+        }
+
+        // Displays the price of the game.
+        static void DisplayPrice()
+        {
+            // The next 2 lines will download the html data off of the website specified and make it into a string
+            var client = new WebClient();
+            string text = client.DownloadString("https://www.hasbro.com/en-us/product/yahtzee-classic:8F0B984E-6D40-1014-8BF0-9EFBF894F9D4");
+
+            // Will find the location of the text "offer-price" from the above string.
+            int i = text.IndexOf("offer-price");
+
+            // Create a new string called "pulledInfo" starting at "offer-price."
+            string pulledInfo = text.Substring(i);
+
+            // Create a new string, 5 characters long starting 70 characters after the "offer-price."
+            // This could be screwed if the webpage ever changes or if the price rises to over 100 dollars.
+            string price = pulledInfo.Substring(70, 5);
+
+            //Writes the line using the found price from above
+            Console.WriteLine("Liked this game? Purchase the physical version from our official Hasbro Website for " + price);
         }
 
         // Main method.
