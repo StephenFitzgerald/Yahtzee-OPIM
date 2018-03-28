@@ -19,6 +19,7 @@ namespace Yahtzee
         static int numberOfRounds = 13;                         // Number of rounds in a game of Yahtzee.
         static int currentRoll = 1;                             // The current roll of the round.
         static int numberOfRolls = 3;                           // Number of rolls allowed during a round.
+        static int currentScore = 0;                            // The current score after each round.
         static int grandTotal = 0;                              // Total score.
         static string lineSeparator = "====================";   // Line separator, for aesthetics.
 
@@ -30,7 +31,7 @@ namespace Yahtzee
                 dice = random.Next(1, 7);
                 diceRoll.Add(dice);
             }
-            
+
             /*
             // Hardcode values of dice rolls to test if each category works.
             diceRoll.Add(1);
@@ -164,10 +165,10 @@ namespace Yahtzee
                 scoreCard[9].ShownScore = smallStraight;
 
             // If only 4 numbers are distinct, then a (1 & 2) OR a (1 & 6) OR a (5 & 6) are required to be missing.
-            else if (diceRoll.Distinct().Count() == 4)
-                if ((!diceRoll.Contains(1) && !diceRoll.Contains(2)) ||     // Is a 1 AND 2 missing? OR...
-                    (!diceRoll.Contains(1) && !diceRoll.Contains(6)) ||     // Is a 1 AND 6 missing? OR...
-                    (!diceRoll.Contains(5) && !diceRoll.Contains(6)))       // Is a 5 AND 6 missing?
+            else if (diceRoll.Distinct().Count() == 4 &&
+                ((!diceRoll.Contains(1) && !diceRoll.Contains(2)) ||    // Is a 1 AND 2 missing? OR...
+                (!diceRoll.Contains(1) && !diceRoll.Contains(6)) ||     // Is a 1 AND 6 missing? OR...
+                (!diceRoll.Contains(5) && !diceRoll.Contains(6))))      // Is a 5 AND 6 missing?
                     scoreCard[9].ShownScore = smallStraight;
 
             // 10. Large Straight
@@ -221,7 +222,7 @@ namespace Yahtzee
             string round = "Current round: " + (currentRound + 1);
 
             // If it is the last round, display a different message.
-            if (currentRound == numberOfRounds)
+            if ((currentRound + 1) == numberOfRounds)
                 Console.WriteLine(round + " (last round!)");
             else
                 Console.WriteLine(round);
@@ -323,7 +324,7 @@ namespace Yahtzee
             // Increment the current round.
             currentRound++;
 
-            // Reset the dicce values back to 0. This is required for rerolling the dice.
+            // Reset the dice values back to 0. This is required for rerolling the dice.
             for (int i = 0; i < diceRoll.Count; i++)
                 diceRoll[i] = 0;
 
@@ -334,14 +335,11 @@ namespace Yahtzee
         // Method that returns the score.
         static int GetScore()
         {
-            // Select only the actual scores from the score list.
-            List<int> scores = scoreCard.Select(i => i.ActualScore).ToList();
-
             // Sum the scores.
-            grandTotal = scores.Sum();
+            currentScore = scoreCard.Sum(i => i.ActualScore);
 
             // Return the current score.
-            return grandTotal;
+            return currentScore;
         }
 
         // Method that asks the user if he or she wants a reroll.
@@ -433,7 +431,7 @@ namespace Yahtzee
                         // Sort the list so numbers go from smallest to largest.
                         diceKept.Sort();
 
-                        // Checks to see if the user entered the same number twice.
+                        // Check to see if the user entered the same number twice.
                         bool isUnique = diceKept.Distinct().Count() == diceKept.Count();
 
                         // If so, then warn the user and try again.
@@ -443,7 +441,7 @@ namespace Yahtzee
                             continue;
                         }
 
-                        // Checks to see if a number less than 1 or greater than 6 was inputted.
+                        // Check to see if a number less than 1 or greater than 6 was inputted.
                         foreach (int i in diceKept)
                         {
                             if (i < 1 || i > 6)
@@ -524,7 +522,28 @@ namespace Yahtzee
             // Show a line separator.
             ShowLine();
 
-            Console.WriteLine("Final score: " + GetScore());
+            // Check to see if an Upper Section bonus should be rewarded.
+            int upperScoreThreshold = 23;
+            int upperScoreSum = 0;
+            int upperScoreBonus = 35;
+
+            // Check to see if the Upper Section total surpassed the threshold.
+            for (int i = 0; i < 6; i++)
+                upperScoreSum += scoreCard[i].ActualScore;
+
+            // Reward the user with the bonus.
+            if (upperScoreSum >= upperScoreThreshold)
+            {
+                grandTotal += upperScoreBonus;
+                Console.WriteLine("Upper Section total: " + upperScoreSum);
+                Console.WriteLine("Upper Section bonus: " + upperScoreBonus);
+                ShowLine();
+            }
+
+            // Calculate the final score after all bonuses.
+            grandTotal += currentScore;
+
+            Console.WriteLine("Final score: " + grandTotal);
 
             // Display information on where to buy the game.
             // TODO.
