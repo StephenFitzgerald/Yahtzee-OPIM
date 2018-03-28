@@ -30,6 +30,15 @@ namespace Yahtzee
                 dice = random.Next(1, 7);
                 diceRoll.Add(dice);
             }
+            
+            /*
+            // Hardcode values of dice rolls to test if each category works.
+            diceRoll.Add(1);
+            diceRoll.Add(2);
+            diceRoll.Add(3);
+            diceRoll.Add(4);
+            diceRoll.Add(5);
+            */
         }
 
         // Method that creates the initial scorecard. Only executed once.
@@ -79,27 +88,86 @@ namespace Yahtzee
         {
             // Calculations for all of the scoring. Pretty much hardcoded because of how these were defined by the rules of the game.
             // Describe the upper section scoring. (Indices 0-5)
-            int upperScore = 6;
-
-            for (int i = 0; i < upperScore; i++)
-                scoreCard[i].Amount = diceRoll.Where(j => j == (i + 1)).Count();
+            int sum = diceRoll.Sum();
+            int upperAmount = 6;
+            for (int i = 0; i < upperAmount; i++)
+                scoreCard[i].Amount = (diceRoll.Where(j => j == (i + 1)).Count() * (i + 1));
 
             // Describe the lower section scoring. (Indices 6-12)
+            // Amount of points awarded for each respective category.
+            int fullHouse = 25;
+            int smallStraight = 30;
+            int largeStraight = 40;
+            int yahtzee = 50;
 
             // 6. Three of a Kind
+            // Check to see if there are AT LEAST 3 occurrences of a number
+            foreach (var v in diceRoll.GroupBy(i => i))
+            {
+                if (v.Count() >= 3)
+                    scoreCard[6].Amount = sum;
+            }
 
             // 7. Four of a Kind
+            // Check to see if there are AT LEAST 4 occurrences of a number
+            foreach (var v in diceRoll.GroupBy(i => i))
+            {
+                if (v.Count() >= 4)
+                    scoreCard[7].Amount = sum;
+            }
 
             // 8. Full House
+            // Declare variables to determine if a full house was rolled.
+            bool isDouble = false;
+            bool isTriple = false;
+
+            // Check to see if there are EXACTLY 2 occurrences of a number
+            foreach (var v in diceRoll.GroupBy(i => i))
+            {
+                if (v.Count() == 2)
+                    isDouble = true;
+            }
+
+            // Check to see if there are EXACTLY 3 occurrences of a number
+            foreach (var v in diceRoll.GroupBy(i => i))
+            {
+                if (v.Count() == 3)
+                    isTriple = true;
+            }
+
+            // If both conditions are met, then a full house was rolled and reward the points.
+            if (isDouble && isTriple)
+                scoreCard[8].Amount = fullHouse;
 
             // 9. Small Straight
+            // 1, 2, 3, 4 OR 2, 3, 4, 5 OR 3, 4, 5, 6 are all small straights.
+            // If all numbers are distinct, it must include a (3 & 4).
+            if (diceRoll.Distinct().Count() == diceRoll.Count() && diceRoll.Contains(3) && diceRoll.Contains(4))
+                scoreCard[9].Amount = smallStraight;
+
+            // If only 4 numbers are distinct, then a (1 & 2) OR a (1 & 6) OR a (5 & 6) are required to be missing.
+            else if (diceRoll.Distinct().Count() == 4)
+                if ((!diceRoll.Contains(1) && !diceRoll.Contains(2)) ||     // Is a 1 AND 2 missing? OR...
+                    (!diceRoll.Contains(1) && !diceRoll.Contains(6)) ||     // Is a 1 AND 6 missing? OR...
+                    (!diceRoll.Contains(5) && !diceRoll.Contains(6)))       // Is a 5 AND 6 missing?
+                    scoreCard[9].Amount = smallStraight;
 
             // 10. Large Straight
+            // This occurs if all dice are distinct AND either a 1 or 6 is missing.
+            // 1, 2, 3, 4, 5 OR 2, 3, 4, 5, 6 are all large straights.
+            if (diceRoll.Distinct().Count() == diceRoll.Count() && (!diceRoll.Contains(1) || !diceRoll.Contains(6)))
+                scoreCard[10].Amount = largeStraight;
 
-            // 11. Yahtzee
+            // 11. Yahtzee (five of a kind)
+            // Check to see if there are EXACTLY 5 occurrences of a number
+            foreach (var v in diceRoll.GroupBy(i => i))
+            {
+                if (v.Count() == 5)
+                    scoreCard[11].Amount = yahtzee;
+            }
 
             // 12. Chance
-            scoreCard[12].Amount = diceRoll.Sum();
+            scoreCard[12].Amount = sum;
 
             Console.WriteLine("Score card:");
 
@@ -158,15 +226,6 @@ namespace Yahtzee
                 for (int i = 1; i < diceRoll.Count + 1; i++)
                 {
                     Console.WriteLine("Dice #" + i + ": " + diceRoll[i - 1].ToString());
-                }
-
-                // Display the sum of the dice roll.
-                Console.WriteLine("Sum: " + diceRoll.Sum());
-
-                // Count the number of occurrences in each dice roll.
-                foreach (var v in diceRoll.GroupBy(i => i))
-                {
-                    Console.WriteLine("{0} : {1}", v.Key, v.Count());
                 }
 
                 // Ask the user which dice they would like to keep.
