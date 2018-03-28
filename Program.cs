@@ -106,6 +106,8 @@ namespace Yahtzee
             // Describe the upper section scoring. (Indices 0-5)
             int sum = diceRoll.Sum();
             int upperAmount = 6;
+
+            // Sum the amounts for each dice value (1-6).
             for (int i = 0; i < upperAmount; i++)
                 scoreCard[i].ShownScore = (diceRoll.Where(j => j == (i + 1)).Count() * (i + 1));
 
@@ -183,6 +185,7 @@ namespace Yahtzee
             }
 
             // 12. Chance
+            // Sum the amounts shown on the dice.
             scoreCard[12].ShownScore = sum;
         }
 
@@ -196,7 +199,8 @@ namespace Yahtzee
             ShowLine();
 
             // Display the score card.
-            Console.WriteLine("Score card. The number after shows result for that category.");
+            Console.WriteLine("Score card. These are the categories available for scoring.");
+            Console.WriteLine("The number after shows result for that category.");
 
             // Display the list of categories.
             for (int i = 0; i < scoreCard.Count; i++)
