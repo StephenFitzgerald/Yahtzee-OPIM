@@ -17,7 +17,7 @@ namespace Yahtzee
         static int numberOfDice = 5;                            // Can be changed if the rules of Yahtzee change the number of dice.
         static int currentRound = 0;                            // The current round of the game.
         static int numberOfRounds = 13;                         // Number of rounds in a game of Yahtzee.
-        static int currentRoll = 1;                             // The current roll of the round.
+        static int currentRoll = 0;                             // The current roll of the round.
         static int numberOfRolls = 3;                           // Number of rolls allowed during a round.
         static int currentScore = 0;                            // The current score after each round.
         static int grandTotal = 0;                              // Total score.
@@ -228,13 +228,7 @@ namespace Yahtzee
                 Console.WriteLine(round);
 
             // Display the number of the dice rolls.
-            string roll = "Roll #" + currentRoll;
-
-            // If it is the last roll, display a different message.
-            if (currentRoll == numberOfRolls)
-                Console.WriteLine(roll + " (last roll!)");
-            else
-                Console.WriteLine(roll);
+            Console.WriteLine("Roll #" + (currentRoll + 1));
 
             // Display a line separator.
             ShowLine();
@@ -314,7 +308,7 @@ namespace Yahtzee
         // Method that resets everything to prepare for the next round.
         static void Reset()
         {
-            // Reset the default values back to 0.
+            // Reset the scores shown back to their default values.
             foreach (Score score in scoreCard)
                 score.ShownScore = 0;
 
@@ -351,43 +345,45 @@ namespace Yahtzee
             // Do this until the user enters a valid input (either "Y" or "N").
             do
             {
-                // If the user still has the option to reroll...
-                if (currentRoll < numberOfRolls)
+                // Asks the user if he or she would like to use a reroll.
+                string roll = "Do you want to re-roll? Yes or No.";
+
+                // If it is the last roll, display a different message.
+                if ((currentRoll + 2) == numberOfRolls)
+                    Console.WriteLine(roll + " (last re-roll!)");
+                else
+                    Console.WriteLine(roll);
+
+                // User-inputted string.
+                string s = Console.ReadLine();
+
+                // If the user enters YES...
+                if (s.ToLower() == "yes")
                 {
-                    // Asks the user if he or she would like to use a reroll.
-                    Console.WriteLine("Do you want to reroll? Yes or No");
+                    // Display a message and break out of the loop.
+                    Console.WriteLine("A reroll was selected.");
+                    isSuccessful = true;
 
-                    // User-inputted string.
-                    string s = Console.ReadLine();
+                    // Ask the user to select the dice to keep.
+                    SelectDice();
+                }
 
-                    // If the user enters YES...
-                    if (s.ToLower() == "yes")
-                    {
-                        // Display a message and break out of the loop.
-                        Console.WriteLine("A reroll was selected.");
-                        isSuccessful = true;
+                // If the user enters NO...
+                else if (s.ToLower() == "no")
+                {
+                    // Display a message and break out of the loop.
+                    Console.WriteLine("No reroll was selected.");
+                    isSuccessful = true;
 
-                        // Ask the user to select the dice to keep.
-                        SelectDice();
-                    }
+                    // Ask the user to enter the score
+                    EnterScore();
+                }
 
-                    // If the user enters NO...
-                    else if (s.ToLower() == "no")
-                    {
-                        // Display a message and break out of the loop.
-                        Console.WriteLine("No reroll was selected.");
-                        isSuccessful = true;
-
-                        // Ask the user to enter the score
-                        EnterScore();
-                    }
-
-                    // If the user enters an invalid input...
-                    else
-                    {
-                        // Display a message and continue looping.
-                        Console.WriteLine("Invalid input. Please type Yes or No.");
-                    }
+                // If the user enters an invalid input...
+                else
+                {
+                    // Display a message and continue looping.
+                    Console.WriteLine("Invalid input. Please type Yes or No.");
                 }
             }
             while (!isSuccessful);
@@ -569,8 +565,8 @@ namespace Yahtzee
                 // Display the score card.
                 DisplayScoreCard();
 
-                // Ask the user which dice they would like to keep.
-                if (currentRoll < numberOfRolls)
+                // Ask the user wants to reroll if it is not the last reroll for the round.
+                if ((currentRoll + 1) < numberOfRolls)
                     AskForReroll();
 
                 // If the user has reached the maximum number of allowed rolls, ask him or her to choose a category to enter the score in.
