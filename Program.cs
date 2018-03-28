@@ -13,14 +13,14 @@ namespace Yahtzee
         static Random random = new Random();                    // Random number generator.
         static List<int> diceRoll = new List<int>();            // A list of the dice rolls from a round.
         static List<Score> scoreCard = new List<Score>();       // A list of scores for the game.
-        static List<Score> finalScoreCard;                      // A list of the final scores for the game.
         static int dice;                                        // Value of a Dice
         static int numberOfDice = 5;                            // Can be changed if the rules of Yahtzee change the number of dice.
-        static int currentRound;                                // The current round of the game.
+        static int currentRound = 0;                            // The current round of the game.
         static int numberOfRounds = 13;                         // Number of rounds in a game of Yahtzee.
         static int currentRoll = 1;                             // The current roll of the round.
         static int numberOfRolls = 3;                           // Number of rolls allowed during a round.
-        static int grandTotal;                                  // Total score.
+        static int grandTotal = 0;                              // Total score.
+        static string lineSeparator = "====================";   // Line separator, for aesthetics.
 
         // Method that creates the initial dice roll. Only executed once.
         static void RollDice()
@@ -57,9 +57,23 @@ namespace Yahtzee
             scoreCard.Add(new Score { Name = "Large Straight" });
             scoreCard.Add(new Score { Name = "Yahtzee" });
             scoreCard.Add(new Score { Name = "Chance" });
+        }
 
-            // Creates a copy of the score card that is used for after the user inputs his or her score and for final calculations.
-            finalScoreCard = scoreCard;
+        // Method that shows a line separator.
+        static void ShowLine()
+        {
+            Console.WriteLine(lineSeparator);
+        }
+
+        // Method that starts the game.
+        static void StartGame()
+        {
+            // Create the score card and roll the dice.
+            CreateScoreCard();
+            RollDice();
+
+            // Show a line separator.
+            ShowLine();
         }
 
         // Method that rerolls the dice.
@@ -80,18 +94,20 @@ namespace Yahtzee
         public class Score
         {
             public string Name { get; set; }    // Name of the category
-            public int Amount = 0;              // Amount of points for that category
+            public int ShownScore = 0;          // Shown score for that category
+            public int ActualScore = 0;         // Final score for that category
+            public bool isUsed = false;         // If the category has been used for scoring.
         }
 
-        // Method that displays the scorecard.
-        static void DisplayScoreCard()
+        // Method that calculates the score for each category.
+        static void CalculateScore()
         {
             // Calculations for all of the scoring. Pretty much hardcoded because of how these were defined by the rules of the game.
             // Describe the upper section scoring. (Indices 0-5)
             int sum = diceRoll.Sum();
             int upperAmount = 6;
             for (int i = 0; i < upperAmount; i++)
-                scoreCard[i].Amount = (diceRoll.Where(j => j == (i + 1)).Count() * (i + 1));
+                scoreCard[i].ShownScore = (diceRoll.Where(j => j == (i + 1)).Count() * (i + 1));
 
             // Describe the lower section scoring. (Indices 6-12)
             // Amount of points awarded for each respective category.
@@ -105,7 +121,7 @@ namespace Yahtzee
             foreach (var v in diceRoll.GroupBy(i => i))
             {
                 if (v.Count() >= 3)
-                    scoreCard[6].Amount = sum;
+                    scoreCard[6].ShownScore = sum;
             }
 
             // 7. Four of a Kind
@@ -113,7 +129,7 @@ namespace Yahtzee
             foreach (var v in diceRoll.GroupBy(i => i))
             {
                 if (v.Count() >= 4)
-                    scoreCard[7].Amount = sum;
+                    scoreCard[7].ShownScore = sum;
             }
 
             // 8. Full House
@@ -137,151 +153,275 @@ namespace Yahtzee
 
             // If both conditions are met, then a full house was rolled and reward the points.
             if (isDouble && isTriple)
-                scoreCard[8].Amount = fullHouse;
+                scoreCard[8].ShownScore = fullHouse;
 
             // 9. Small Straight
             // 1, 2, 3, 4 OR 2, 3, 4, 5 OR 3, 4, 5, 6 are all small straights.
             // If all numbers are distinct, it must include a (3 & 4).
             if (diceRoll.Distinct().Count() == diceRoll.Count() && diceRoll.Contains(3) && diceRoll.Contains(4))
-                scoreCard[9].Amount = smallStraight;
+                scoreCard[9].ShownScore = smallStraight;
 
             // If only 4 numbers are distinct, then a (1 & 2) OR a (1 & 6) OR a (5 & 6) are required to be missing.
             else if (diceRoll.Distinct().Count() == 4)
                 if ((!diceRoll.Contains(1) && !diceRoll.Contains(2)) ||     // Is a 1 AND 2 missing? OR...
                     (!diceRoll.Contains(1) && !diceRoll.Contains(6)) ||     // Is a 1 AND 6 missing? OR...
                     (!diceRoll.Contains(5) && !diceRoll.Contains(6)))       // Is a 5 AND 6 missing?
-                    scoreCard[9].Amount = smallStraight;
+                    scoreCard[9].ShownScore = smallStraight;
 
             // 10. Large Straight
             // This occurs if all dice are distinct AND either a 1 or 6 is missing.
             // 1, 2, 3, 4, 5 OR 2, 3, 4, 5, 6 are all large straights.
             if (diceRoll.Distinct().Count() == diceRoll.Count() && (!diceRoll.Contains(1) || !diceRoll.Contains(6)))
-                scoreCard[10].Amount = largeStraight;
+                scoreCard[10].ShownScore = largeStraight;
 
             // 11. Yahtzee (five of a kind)
             // Check to see if there are EXACTLY 5 occurrences of a number
             foreach (var v in diceRoll.GroupBy(i => i))
             {
                 if (v.Count() == 5)
-                    scoreCard[11].Amount = yahtzee;
+                    scoreCard[11].ShownScore = yahtzee;
             }
 
             // 12. Chance
-            scoreCard[12].Amount = sum;
+            scoreCard[12].ShownScore = sum;
+        }
 
-            Console.WriteLine("Score card:");
+        // Method that displays the scorecard.
+        static void DisplayScoreCard()
+        {
+            // Calculate the score for each category.
+            CalculateScore();
 
+            // Display a line separator.
+            ShowLine();
+
+            // Display the score card.
+            Console.WriteLine("Score card. The number after shows result for that category.");
+
+            // Display the list of categories.
             for (int i = 0; i < scoreCard.Count; i++)
             {
-                Console.WriteLine(scoreCard[i].Name + ": " + scoreCard[i].Amount);
+                // Do not display categories that the user already used for scoring.
+                if (!scoreCard[i].isUsed)
+                    Console.WriteLine(scoreCard[i].Name + ": " + scoreCard[i].ShownScore);
             }
 
-            Console.WriteLine("Enter the category you want to submit your score to (ex. Fours, Small Straight).");
+            // Display a line separator.
+            ShowLine();
+        }
+
+        // Method that displays the header information.
+        static void DisplayHeader()
+        {
+            // Display the current round.
+            string round = "Current round: " + (currentRound + 1);
+
+            // If it is the last round, display a different message.
+            if (currentRound == numberOfRounds)
+                Console.WriteLine(round + " (last round!)");
+            else
+                Console.WriteLine(round);
+
+            // Display the number of the dice rolls.
+            string roll = "Roll #" + currentRoll;
+
+            // If it is the last roll, display a different message.
+            if (currentRoll == numberOfRolls)
+                Console.WriteLine(roll + " (last roll!)");
+            else
+                Console.WriteLine(roll);
+
+            // Display a line separator.
+            ShowLine();
+        }
+
+        // Method that displays the results of the dice roll.
+        static void DisplayResults()
+        {
+            // Display each of the dice rolls.
+            for (int i = 1; i < diceRoll.Count + 1; i++)
+            {
+                Console.WriteLine("Dice #" + i + ": " + diceRoll[i - 1].ToString());
+            }
         }
 
         // Method that enters the score.
         static void EnterScore()
         {
-            string s = Console.ReadLine();
+            // Boolean to determine if the user completed a successful action.
+            bool isSuccessful = false;
 
-            for (int i = 0; i < scoreCard.Count; i++)
+            do
             {
-                if (s.ToLower().Equals(scoreCard[i].Name.ToLower()))
+                // Ask the user for the category.
+                Console.WriteLine("Enter the category you want to submit your score to (ex. Fours, Small Straight).");
+
+                // User-inputted string.
+                string s = Console.ReadLine();
+
+                // Is the category already used?
+                bool isAlreadyUsed = false;
+
+                // Check to see the category that the user inputted.
+                for (int i = 0; i < scoreCard.Count; i++)
                 {
-                    finalScoreCard[i].Amount = scoreCard[i].Amount;
-                    break;
-                }
-            }
-        }
-
-        static void CalculateScore()
-        {
-            List<int> scores = scoreCard.Select(i => i.Amount).ToList();
-            grandTotal = scores.Sum();
-        }
-
-        // Main method.
-        static void Main(string[] args)
-        {
-            // Create the score card.
-            CreateScoreCard();
-
-            // Roll the dice.
-            RollDice();
-            DisplayScoreCard();
-
-            // If the game is not over...
-            for (currentRound = 0; currentRound < numberOfRounds; numberOfRounds++)
-            {
-                // Display the number of the dice rolls.
-                string roll = "Roll #" + currentRoll;
-
-                // If it is the last roll, display a different message.
-                if (currentRoll == numberOfRolls - 1)
-                    Console.WriteLine(roll);
-                else
-                    Console.WriteLine(roll + " (last roll!)");
-
-                // Display the results of the dice roll.
-                for (int i = 1; i < diceRoll.Count + 1; i++)
-                {
-                    Console.WriteLine("Dice #" + i + ": " + diceRoll[i - 1].ToString());
-                }
-
-                // Ask the user which dice they would like to keep.
-                bool isValid = true;
-
-                // Do this until the user enters a valid input (either "Y" or "N").
-                do
-                {
-                    // If the user still has the option to reroll...
-                    if (currentRoll < numberOfRolls)
+                    if (s.ToLower().Equals(scoreCard[i].Name.ToLower()))
                     {
-                        // Asks the user if he or she would like to use a reroll.
-                        Console.WriteLine("Do you want to reroll? Y/N");
-
-                        // User-inputted string.
-                        string s = Console.ReadLine();
-
-                        // If the user enters YES...
-                        if (s.ToLower() == "y")
+                        // If the category selected was already used...
+                        if (scoreCard[i].isUsed)
                         {
-                            Console.WriteLine("You put yes.");
-                            isValid = false;
+                            // Display a message to try again.
+                            Console.WriteLine("Invalid input. Category " + s + " is already used for scoring. Please choose a different one.");
+                            isAlreadyUsed = true;
+                            break;
                         }
 
-                        // If the user enters NO...
-                        else if (s.ToLower() == "n")
-                        {
-                            Console.WriteLine("You put no.");
-                            isValid = false;
-
-                            // TODO
-                            // Code asking reroll.
-                        }
-
-                        // If the user enters an invalid input...
+                        // If the category selected has not been used...
                         else
                         {
-                            Console.WriteLine("Invalid input. Please type Y or N.");
-                            continue;
+                            // Enter the score.
+                            scoreCard[i].ActualScore = scoreCard[i].ShownScore;
+                            Console.WriteLine("Successfully submitted. Current score: " + GetScore());
+
+                            // Display a line separator.
+                            ShowLine();
+
+                            // Mark the category as "used."
+                            scoreCard[i].isUsed = true;
+
+                            // User input is successful. Break out of the loop.
+                            isSuccessful = true;
+                            break;
                         }
                     }
                 }
-                while (isValid);
 
-                // Do this until the user enters a valid input.
-                do
+                // If a category was not found AND not used, the user misspelled.
+                if (!isSuccessful && !isAlreadyUsed)
+                    Console.WriteLine("Invalid input. Make sure you spelled the category correctly.");
+            }
+            while (!isSuccessful);
+
+            // Reset the round.
+            Reset();
+        }
+
+        // Method that resets everything to prepare for the next round.
+        static void Reset()
+        {
+            // Reset the default values back to 0.
+            foreach (Score score in scoreCard)
+                score.ShownScore = 0;
+
+            // Reset the current roll back to 0.
+            currentRoll = 0;
+
+            // Increment the current round.
+            currentRound++;
+
+            // Reset the dicce values back to 0. This is required for rerolling the dice.
+            for (int i = 0; i < diceRoll.Count; i++)
+                diceRoll[i] = 0;
+
+            // Reroll the dice for the next round.
+            RerollDice();
+        }
+
+        // Method that returns the score.
+        static int GetScore()
+        {
+            // Select only the actual scores from the score list.
+            List<int> scores = scoreCard.Select(i => i.ActualScore).ToList();
+
+            // Sum the scores.
+            grandTotal = scores.Sum();
+
+            // Return the current score.
+            return grandTotal;
+        }
+
+        // Method that asks the user if he or she wants a reroll.
+        static void AskForReroll()
+        {
+            // Boolean to determine if the user completed a successful action.
+            bool isSuccessful = false;
+
+            // Do this until the user enters a valid input (either "Y" or "N").
+            do
+            {
+                // If the user still has the option to reroll...
+                if (currentRoll < numberOfRolls)
                 {
-                    // Ask the user which dice he or she wants to keep.
-                    Console.WriteLine("Which dice #s do you want to keep? Separate using spaces (ex. 2 3 5)");
-                    isValid = true;
+                    // Asks the user if he or she would like to use a reroll.
+                    Console.WriteLine("Do you want to reroll? Yes or No");
 
                     // User-inputted string.
                     string s = Console.ReadLine();
 
-                    // Check for any invalid input. Ex. inputting any symbols or letters.
-                    try
+                    // If the user enters YES...
+                    if (s.ToLower() == "yes")
+                    {
+                        // Display a message and break out of the loop.
+                        Console.WriteLine("A reroll was selected.");
+                        isSuccessful = true;
+
+                        // Ask the user to select the dice to keep.
+                        SelectDice();
+                    }
+
+                    // If the user enters NO...
+                    else if (s.ToLower() == "no")
+                    {
+                        // Display a message and break out of the loop.
+                        Console.WriteLine("No reroll was selected.");
+                        isSuccessful = true;
+
+                        // Ask the user to enter the score
+                        EnterScore();
+                    }
+
+                    // If the user enters an invalid input...
+                    else
+                    {
+                        // Display a message and continue looping.
+                        Console.WriteLine("Invalid input. Please type Yes or No.");
+                    }
+                }
+            }
+            while (!isSuccessful);
+        }
+
+        // Method that asks the user which dice he or she wants to keep.
+        static void SelectDice()
+        {
+            // Boolean to determine if the user completed a successful action.
+            bool isSuccessful = false;
+
+            // Do this until the user enters a valid input.
+            do
+            {
+                // Ask the user which dice he or she wants to keep.
+                Console.WriteLine("Which dice #s do you want to keep? Leave blank for none. Separate using spaces (ex. 2 3 5)");
+
+                // User-inputted string.
+                string s = Console.ReadLine();
+
+                // Check for any invalid input. Ex. inputting any symbols or letters.
+                try
+                {
+                    // If left blank...
+                    if (String.IsNullOrEmpty(s))
+                    {
+                        // Display a message.
+                        Console.WriteLine("No dice were selected. Rerolling...");
+
+                        // Reset all dice values to be rerolled.
+                        for (int i = 0; i < diceRoll.Count; i++)
+                            diceRoll[i] = 0;
+                    }
+
+                    // If not blank...
+                    else
                     {
                         // Split the inputted string into each individual dice value.
                         List<int> diceKept = s.Split(null).Select(Int32.Parse).ToList();
@@ -292,6 +432,7 @@ namespace Yahtzee
                         // Checks to see if the user entered the same number twice.
                         bool isUnique = diceKept.Distinct().Count() == diceKept.Count();
 
+                        // If so, then warn the user and try again.
                         if (!isUnique)
                         {
                             Console.WriteLine("Invalid input. Dice number was repeated.");
@@ -308,9 +449,28 @@ namespace Yahtzee
                             }
                         }
 
+                        // Show a message displaying the user's kept dice.
+                        string diceSelected = "";
+
+                        for (int i = 0; i < s.Length; i++)
+                        {
+                            // Add a period after the last selected dice instead of a comma.
+                            if (i == (s.Length - 1))
+                                diceSelected += s[i] + ".";
+                            else
+                                diceSelected += s[i];
+                        }
+
+                        // Display the message.
+                        Console.WriteLine("You selected to keep dice " + diceSelected);
+
+                        // Display a line separator.
+                        Console.WriteLine(lineSeparator);
+
                         // Temporary variable. Used for iterating.
                         int j = 0;
 
+                        // Check to see which dice the user selected to keep.
                         for (int i = 0; i < diceRoll.Count; i++)
                         {
                             // If the index of the dice roll is NOT equal to the dice the user wants to keep...
@@ -324,27 +484,83 @@ namespace Yahtzee
                             else if (j != diceKept.Count() - 1)
                                 j++;
                         }
-
-                        Console.WriteLine(diceRoll[0].ToString() + diceRoll[1].ToString() + diceRoll[2].ToString() + diceRoll[3].ToString() + diceRoll[4].ToString());
-
-                        isValid = false;
                     }
 
-                    // If there are any errors...
-                    catch (Exception e)
-                    {
-                        Console.WriteLine("Invalid input." + e.Message);
-                        continue;
-                    }
+                    // Break out of the loop.
+                    isSuccessful = true;
                 }
-                while (isValid);
 
-                // If the user has not reached the maximum number of allowed rolls, then reroll.
-                if (currentRoll < numberOfRolls)
-                    RerollDice();
-
-                Console.ReadLine();
+                // If there are any errors...
+                catch (Exception e)
+                {
+                    // Display the message and continue looping.
+                    Console.WriteLine("Invalid input." + e.Message);
+                    continue;
+                }
             }
+            while (!isSuccessful);
+
+            // Reroll the dice.
+            RerollDice();
+        }
+
+        // Method that ends the game.
+        static void EndGame()
+        {
+            // Show a message indicating that the game is over.
+            Console.WriteLine("Game over! Results:");
+
+            // Show a line separator.
+            ShowLine();
+
+            // Display the results.
+            for (int i = 0; i < scoreCard.Count; i++)
+                Console.WriteLine(scoreCard[i].Name + ": " + scoreCard[i].ActualScore);
+
+            // Show a line separator.
+            ShowLine();
+
+            Console.WriteLine("Final score: " + GetScore());
+
+            // Display information on where to buy the game.
+            // TODO.
+            Console.WriteLine("Press enter to exit.");
+            Console.ReadLine();
+        }
+
+        // Main method.
+        static void Main(string[] args)
+        {
+            // Start the game. 
+            StartGame();
+
+            // If the game is not over...
+            do
+            {
+                // Display the header information.
+                DisplayHeader();
+
+                // Display the results.
+                DisplayResults();
+
+                // Display the score card.
+                DisplayScoreCard();
+
+                // Ask the user which dice they would like to keep.
+                if (currentRoll < numberOfRolls)
+                    AskForReroll();
+
+                // If the user has reached the maximum number of allowed rolls, ask him or her to choose a category to enter the score in.
+                else
+                {
+                    // Enter the score.
+                    EnterScore();
+                }
+            }
+            while (currentRound < numberOfRounds);
+
+            // End the game.
+            EndGame();
         }
     }
 }
