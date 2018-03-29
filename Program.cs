@@ -28,17 +28,17 @@ namespace Yahtzee
         // Score object to be used by the score card.
         public class Score
         {
-            public string Name { get; set; }    // Name of the category
-            public int ShownScore = 0;          // Shown score for that category
-            public int ActualScore = 0;         // Final score for that category
+            public string Name { get; set; }    // Name of the category.
+            public int ShownScore = 0;          // Shown score for that category.
+            public int ActualScore = 0;         // Final score for that category.
             public bool isUsed = false;         // If the category has been used for scoring.
         }
 
         // Dice object to be used for rolling.
         public class Dice
         {
-            public int Value = 0;
-            public bool IsKept = false;
+            public int Value = 0;               // The dice's face value.
+            public bool IsKept = false;         // If the user decides to keep the dice for the next reroll.
         }
 
         // Method that shows a line separator.
