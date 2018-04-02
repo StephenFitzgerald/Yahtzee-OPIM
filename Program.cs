@@ -574,7 +574,11 @@ namespace Yahtzee
 
             // Create a new string, 5 characters long starting 70 characters after the "offer-price."
             // This could be screwed if the webpage ever changes or if the price rises to over 100 dollars.
-            string price = pulledInfo.Substring(70, 5);
+            // string price = pulledInfo.Substring(70, 5);
+
+            //fixed above issue
+            string price = ExtractPrice(pulledInfo);
+
 
             //Writes the line using the found price from above
             Console.WriteLine("Liked this game? Purchase the physical version from our official Hasbro Website for " + price);
@@ -613,6 +617,44 @@ namespace Yahtzee
 
             // End the game.
             EndGame();
+        }
+
+        // Extract Price of game
+        private static string ExtractPrice(string fullString)
+        {
+            string price;
+            int dollarIndex = 0;
+            int decimalIndex = 0;
+            int endIndex = 0;
+
+            // Searches string to find the dollar sign, gets index of dollar sign location
+            for(int i = 0; i < fullString.Length; i++)
+            {
+                if (fullString[i] == '$')
+                {
+                    dollarIndex = i;
+                    break;
+                }
+            }
+
+            // trims string to begin at the dollar sign
+            price = fullString.Substring(dollarIndex);
+
+            // gets the index of the decimal point location
+            for (int i = 0; i < price.Length; i++)
+            {
+                if (price[i] == '.')
+                {
+                    decimalIndex = i;
+                    break;
+                }
+            }
+
+            // gets index of the end of price, ends decimal string at 2 places after the decimal
+            endIndex = decimalIndex + 2;
+
+            // returns only the price, from dollar sign to two points after the decimal
+            return price.Substring(0, endIndex+1);
         }
     }
 }
