@@ -572,13 +572,8 @@ namespace Yahtzee
             // Create a new string called "pulledInfo" starting at "offer-price."
             string pulledInfo = text.Substring(i);
 
-            // Create a new string, 5 characters long starting 70 characters after the "offer-price."
-            // This could be screwed if the webpage ever changes or if the price rises to over 100 dollars.
-            // string price = pulledInfo.Substring(70, 5);
-
             //fixed above issue
             string price = ExtractPrice(pulledInfo);
-
 
             //Writes the line using the found price from above
             Console.WriteLine("Liked this game? Purchase the physical version from our official Hasbro Website for " + price);
